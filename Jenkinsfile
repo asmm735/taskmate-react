@@ -10,45 +10,51 @@ pipeline {
 
         stage('Install Node Dependencies') {
             steps {
-                bat 'npm install'
+                bat '''
+                call npm -v
+                call node -v
+                call npm install --no-audit --no-fund --verbose
+                '''
             }
         }
 
         stage('Build React App') {
             steps {
-                bat 'npm run build'
+                bat 'call npm run build'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t taskmate-react .'
+                bat 'call docker build -t taskmate-react .'
             }
         }
 
         stage('Install Selenium') {
             steps {
-                bat 'pip install selenium'
+                bat 'call pip install selenium'
             }
         }
 
         stage('Run App Locally For UI Test') {
             steps {
-                bat 'start /B npx serve -s build -l 3000'
+                bat 'start /B cmd /c "npx serve -s build -l 3000"'
                 bat 'timeout /t 10'
             }
         }
 
         stage('Run Selenium Test') {
             steps {
-                bat 'python tests\\test_homepage.py'
+                bat 'call python tests\\test_homepage.py'
             }
         }
     }
 
     post {
         always {
-            bat 'taskkill /F /IM node.exe || exit /b 0'
+            script {
+                bat(returnStatus: true, script: 'taskkill /F /IM node.exe')
+            }
             archiveArtifacts artifacts: 'build/**/*', allowEmptyArchive: true
         }
     }

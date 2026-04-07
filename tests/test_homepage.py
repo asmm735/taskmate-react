@@ -10,7 +10,25 @@ options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--window-size=1400,900')
 options.binary_location = '/usr/bin/chromium'
 
-service = Service('/usr/bin/chromedriver')
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+
+options = Options()
+options.add_argument("--headless=new")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+
+service = Service(r"C:\WebDriver\bin\chromedriver.exe")
+driver = webdriver.Chrome(service=service, options=options)
+
+driver.get("http://localhost:3000")
+
+page = driver.page_source
+assert "Taskmate" in driver.title or "Taskmate" in page
+assert "Todo" in page
+
+driver.quit()
 driver = webdriver.Chrome(service=service, options=options)
 
 try:

@@ -1,66 +1,55 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'taskmate-react'
-        APP_PORT = '3000'
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/asmm735/taskmate-react.git'
             }
         }
 
         stage('Install Node Dependencies') {
             steps {
-                sh 'npm ci'
+                bat 'npm install'
             }
         }
 
         stage('Build React App') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:latest .'
+                bat 'docker build -t taskmate-react .'
             }
         }
 
-        stage('Install Browser + Selenium') {
+        stage('Install Selenium') {
             steps {
-                sh '''
-                    sudo apt-get update || apt-get update
-                    sudo apt-get install -y chromium-driver chromium python3-pip || apt-get install -y chromium-driver chromium python3-pip
-                    pip3 install --break-system-packages selenium || pip3 install selenium
-                '''
+                bat 'pip install selenium'
             }
         }
 
         stage('Run App Locally For UI Test') {
             steps {
-                sh '''
-                    nohup npx serve -s build -l $APP_PORT > app.log 2>&1 &
-                    sleep 10
-                '''
+                bat 'start /B npx serve -s build -l 3000'
+                bat 'timeout /t 10'
             }
         }
 
         stage('Run Selenium Test') {
             steps {
-                sh 'python3 tests/test_homepage.py'
+                bat 'python tests\\test_homepage.py'
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'app.log', onlyIfSuccessful: false
-            sh 'pkill -f "serve -s build" || true'
+            bat 'taskkill /F /IM node.exe || exit /b 0'
+            archiveArtifacts artifacts: 'build/**/*', allowEmptyArchive: true
         }
     }
 }

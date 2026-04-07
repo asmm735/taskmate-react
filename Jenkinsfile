@@ -39,7 +39,7 @@ pipeline {
         stage('Run App Locally For UI Test') {
             steps {
                 bat 'start /B cmd /c "npx serve -s build -l 3000"'
-                bat 'timeout /t 10'
+                sleep 10
             }
         }
 
